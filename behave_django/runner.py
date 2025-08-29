@@ -13,6 +13,20 @@ class BehaviorDrivenTestRunner(DiscoverRunner, BehaveHooksMixin):
 
     testcase_class = BehaviorDrivenTestCase
 
+    def teardown_databases(self, old_config, **kwargs):
+        for connection, old_name, destroy in old_config:
+            print("teardown_databases", connection.cursor, old_name, destroy)
+            if destroy:
+                query = f"""
+SELECT pg_terminate_backend(pg_stat_activity.pid)
+FROM pg_stat_activity
+WHERE pg_stat_activity.datname = 'test_{old_name}'
+AND pid <> pg_backend_pid();
+"""
+                with connection.cursor() as cursor:
+                    cursor.execute(query)
+                connection.close()
+        super().teardown_databases(old_config, **kwargs)
 
 class ExistingDatabaseTestRunner(DiscoverRunner, BehaveHooksMixin):
     """Test runner that uses the ExistingDatabaseTestCase.
