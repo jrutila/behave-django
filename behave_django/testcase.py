@@ -90,3 +90,9 @@ class DjangoSimpleTestCase(PreventTestExecutionMixin, TestCase):
 
     Also, it prevents the regular tests from running.
     """
+
+    # Workaround as with behave 1.2.7.dev8 forwards the transactions are broken
+    # Runs simple tests without transactions, a little slower, but works.
+    @classmethod
+    def _databases_support_transactions(cls):
+        return False
